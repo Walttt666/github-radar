@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitHub Star Radar
 
-## Getting Started
+Discover fast-growing open-source repositories using GitHub star history.
 
-First, run the development server:
+## Features
+
+- Daily Star Growth
+- Weekly Star Growth
+- Monthly Star Growth
+- Total Stars sorting
+- Growth percentage sorting
+- AI category
+- Agents category
+- Robotics category
+- Drone category
+- Computer Vision category
+- Repository search
+- GitHub Star History
+- Responsive desktop/mobile UI
+- Authenticated GitHub API support
+
+## How Ranking Works
+
+GitHub does not provide an API for globally ranking every repository by stars gained over a period.
+
+GitHub Star Radar therefore:
+
+1. Discovers a candidate pool using GitHub Repository Search.
+2. Fetches GitHub Star History for the candidates.
+3. Calculates stars gained over 1 / 7 / 30 calendar days.
+4. Ranks the candidate pool by stars gained.
+
+Rankings are approximate and are not an exhaustive index of every GitHub repository.
+
+## Metrics
+
+- **Star Growth** — The number of stars gained during the selected 1, 7, or 30-day period.
+- **Total Stars** — The repository's current total GitHub star count.
+- **Growth %** — Stars gained during the selected period relative to the repository's estimated star count at the start of that period.
+
+## Tech Stack
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- GitHub REST API
+- Vercel
+
+## Local Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the project root:
 
-## Learn More
+```dotenv
+GITHUB_TOKEN=
+```
 
-To learn more about Next.js, take a look at the following resources:
+The token is optional, but authenticated requests receive higher GitHub API rate limits. Never commit `.env.local` or real GitHub tokens.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```http
+GET /api/trending
+```
 
-## Deploy on Vercel
+Supported query parameters:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+period=day|week|month
+category=all|ai|agents|robotics|drone|cv
+q=
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Example:
+
+```http
+GET /api/trending?period=week&category=ai&q=agent
+```
+
+## Limitations
+
+- Rankings are generated from a candidate pool rather than every repository on GitHub.
+- GitHub API rate limits apply, especially without authentication.
+- GitHub Star History calendar boundaries are approximate.
+- Cached upstream data may delay refreshes.
+
+## License
+
+No license has been added to this repository yet.
