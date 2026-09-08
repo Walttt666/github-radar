@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Activity, CircleDot } from "lucide-react";
-import { formatRelativeTime } from "@/lib/format";
 import type {
   SortOption,
   TrendingCategory,
@@ -76,8 +75,31 @@ function isTrendingResponse(value: unknown): value is TrendingResponse {
 }
 
 function getErrorMessage(value: unknown): string {
-  if (isRecord(value) && isRecord(value.error) && typeof value.error.message === "string") {
-    return value.error.message;
+  if (isRecord(value) && isRecord(value.error)) {
+    if (value.error.code === "GITHUB_RATE_LIMITED") {
+      const rateLimit = isRecord(value.error.rateLimit) ? value.error.rateLimit : null;
+      const retryAfterSeconds = rateLimit?.retryAfterSeconds;
+      const resetAt = rateLimit?.resetAt;
+      const retryAt = isFiniteNumber(retryAfterSeconds)
+        ? new Date(Date.now() + retryAfterSeconds * 1_000)
+        : typeof resetAt === "string"
+          ? new Date(resetAt)
+          : null;
+      const retryTimestamp = retryAt && Number.isFinite(retryAt.getTime())
+        ? new Intl.DateTimeFormat("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }).format(retryAt)
+        : null;
+
+      return retryTimestamp
+        ? `GitHub API rate limit reached. Try again after ${retryTimestamp}.`
+        : "GitHub API rate limit reached. Please try again in a few minutes.";
+    }
+    if (typeof value.error.message === "string") {
+      return value.error.message;
+    }
   }
   return "GitHub data is temporarily unavailable. Please try again shortly.";
 }
@@ -164,7 +186,11 @@ export function RadarDashboard() {
 
   return (
     <div className="min-h-screen bg-[#090b0e] text-zinc-100">
-      <RadarHeader isRefreshing={status === "loading"} onRefresh={handleRefresh} />
+      <RadarHeader
+        isRefreshing={status === "loading"}
+        lastUpdatedAt={meta?.generatedAt ?? null}
+        onRefresh={handleRefresh}
+      />
 
       <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
         <div className="mb-6 sm:hidden">
@@ -190,15 +216,20 @@ export function RadarDashboard() {
               </div>
               <div>
                 <h2 id="ranking-heading" className="text-sm font-semibold text-zinc-200">Trending repositories</h2>
-                <p className="mt-0.5 text-xs text-zinc-600">
-                  {visibleRepositories.length} {visibleRepositories.length === 1 ? "result" : "results"}
-                  {meta ? ` · Updated ${formatRelativeTime(meta.generatedAt)}` : ""}
+                <p className="mt-0.5 text-xs text-zinc-400/80">
+                  {status === "loading"
+                    ? "Scanning GitHub star history…"
+                    : `${visibleRepositories.length} ${visibleRepositories.length === 1 ? "result" : "results"}${meta ? ` · ${meta.candidateCount} candidates scanned` : ""}`}
                 </p>
               </div>
             </div>
-            <div className="inline-flex items-center gap-2 text-xs text-zinc-600">
+            <div className="inline-flex items-center gap-2 text-xs text-zinc-400/80">
               <CircleDot aria-hidden="true" className="size-3 text-emerald-400" />
-              {meta?.authenticated ? "Authenticated GitHub data" : "Public GitHub data"}
+              {status === "loading" && !meta
+                ? "Connecting to GitHub…"
+                : meta?.authenticated
+                  ? "Authenticated GitHub data"
+                  : "Public GitHub data"}
             </div>
           </div>
 
@@ -215,7 +246,7 @@ export function RadarDashboard() {
           </div>
         </section>
 
-        <footer className="flex flex-col gap-1.5 px-1 pb-4 pt-5 text-xs text-zinc-700 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="flex flex-col gap-1.5 px-1 pb-4 pt-5 text-xs text-zinc-400/80 sm:flex-row sm:items-center sm:justify-between">
           <p className="max-w-4xl leading-5">
             Rankings are calculated from a candidate pool using GitHub star history and are not an exhaustive index of every GitHub repository.
           </p>

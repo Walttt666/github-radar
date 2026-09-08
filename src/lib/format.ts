@@ -14,6 +14,11 @@ const percentageFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 });
 
+const compactPercentageFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
 export function formatStars(value: number): string {
   return compactNumberFormatter.format(value).toLowerCase();
 }
@@ -24,6 +29,14 @@ export function formatStarGain(value: number): string {
 
 export function formatPercentage(value: number): string {
   return `+${percentageFormatter.format(value)}%`;
+}
+
+export function formatCompactPercentage(value: number): string {
+  if (Math.abs(value) < 10_000) {
+    return formatPercentage(value);
+  }
+
+  return `+${compactPercentageFormatter.format(value)}%`;
 }
 
 export const periodLabels: Record<TrendingPeriod, string> = {

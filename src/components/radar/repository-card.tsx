@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ArrowUpRight, Star, TrendingUp } from "lucide-react";
 import {
+  formatCompactPercentage,
   formatPercentage,
   formatRelativeTime,
   formatStarGain,
@@ -19,17 +20,39 @@ interface RepositoryCardProps {
 
 export function RepositoryCard({ repository, rank, period }: RepositoryCardProps) {
   const formattedRank = `#${String(rank).padStart(2, "0")}`;
+  const isTopThree = rank <= 3;
   const sparklineValues = repository.starHistory.slice(period === "month" ? -30 : -7).map((point) => point.stars);
   const displayedSparkline = sparklineValues.length > 0 ? sparklineValues : [0];
+  const fullGrowthPercentage = formatPercentage(repository.growthPercent);
 
   return (
-    <article className="group relative grid gap-4 px-4 py-5 transition-colors hover:bg-white/[0.018] sm:px-5 lg:grid-cols-[48px_minmax(0,1fr)_340px] lg:items-center lg:gap-5 lg:px-6 lg:py-5">
-      <div className="absolute left-0 top-5 h-7 w-px bg-emerald-400/0 transition-colors group-hover:bg-emerald-400/70" />
+    <article
+      className={`group relative grid gap-4 px-4 transition-colors hover:bg-white/[0.02] sm:px-5 lg:grid-cols-[52px_minmax(0,1fr)_440px] lg:items-center lg:gap-5 lg:px-6 ${
+        isTopThree ? "bg-white/[0.012] py-6" : "py-5"
+      }`}
+    >
+      <div
+        className={`absolute inset-y-4 left-0 w-px transition-colors ${
+          rank === 1
+            ? "bg-emerald-400/70"
+            : isTopThree
+              ? "bg-zinc-500/40"
+              : "bg-transparent group-hover:bg-emerald-400/60"
+        }`}
+      />
 
-      <div className="flex items-center justify-between lg:block">
-        <span className="font-mono text-sm font-medium tracking-[-0.03em] text-zinc-600">{formattedRank}</span>
-        <span className="rounded-full border border-emerald-400/15 bg-emerald-400/[0.06] px-2 py-1 text-[11px] font-medium text-emerald-400 lg:hidden">
-          {formatPercentage(repository.growthPercent)}
+      <div className="lg:self-start lg:pt-0.5">
+        <span
+          aria-label={`Rank ${rank}`}
+          className={`font-mono font-semibold tracking-[-0.04em] ${
+            rank === 1
+              ? "text-lg text-emerald-300"
+              : isTopThree
+                ? "text-base text-zinc-300"
+                : "text-sm text-zinc-400/75"
+          }`}
+        >
+          {formattedRank}
         </span>
       </div>
 
@@ -48,7 +71,8 @@ export function RepositoryCard({ repository, rank, period }: RepositoryCardProps
               href={repository.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex max-w-full items-center gap-1.5 text-[15px] font-semibold tracking-[-0.015em] text-zinc-100 outline-none transition-colors hover:text-emerald-300 focus-visible:rounded focus-visible:ring-2 focus-visible:ring-emerald-400/70"
+              aria-label={`Open ${repository.fullName} on GitHub in a new tab`}
+              className="inline-flex max-w-full items-center gap-1.5 text-base font-semibold tracking-[-0.015em] text-zinc-100 outline-none transition-colors hover:text-emerald-300 focus-visible:rounded focus-visible:ring-2 focus-visible:ring-emerald-400/70"
             >
               <span className="truncate">
                 <span className="font-normal text-zinc-500">{repository.owner.login}/</span>
@@ -60,7 +84,7 @@ export function RepositoryCard({ repository, rank, period }: RepositoryCardProps
               {repository.description ?? "No description provided."}
             </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-zinc-600">
+            <div className="mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-zinc-400/80">
               {repository.language && (
                 <span className="inline-flex items-center gap-1.5 text-zinc-400">
                   <span className="size-2 rounded-full" style={{ backgroundColor: getLanguageColor(repository.language) }} />
@@ -71,44 +95,46 @@ export function RepositoryCard({ repository, rank, period }: RepositoryCardProps
               <span>Updated {formatRelativeTime(repository.updatedAt)}</span>
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {repository.topics.slice(0, 4).map((topic) => (
-                <span key={topic} className="rounded-md border border-white/[0.07] bg-white/[0.025] px-2 py-1 text-[11px] leading-none text-zinc-500">
-                  {topic}
-                </span>
-              ))}
-            </div>
+            {repository.topics.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {repository.topics.slice(0, 4).map((topic) => (
+                  <span key={topic} className="rounded-md border border-white/[0.08] bg-white/[0.025] px-2 py-1 text-xs leading-none text-zinc-400/80">
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 items-end gap-3 border-t border-white/[0.06] pt-4 lg:grid-cols-[90px_126px_116px] lg:border-0 lg:pt-0">
+      <div className="grid grid-cols-2 items-end gap-x-4 gap-y-4 border-t border-white/[0.07] pt-4 sm:grid-cols-[minmax(132px,1fr)_88px_88px_116px] sm:items-center sm:gap-x-4 lg:grid-cols-[132px_76px_80px_116px] lg:gap-x-3 lg:border-0 lg:pt-0">
+        <div aria-label={`${formatStarGain(repository.starsGained)} stars gained ${periodLabels[period]}`}>
+          <div className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-300/80">
+            {periodLabels[period]}
+          </div>
+          <div className="flex items-center gap-1.5 text-[22px] font-semibold leading-none tabular-nums tracking-[-0.025em] text-emerald-300">
+            <TrendingUp aria-hidden="true" className="size-4.5" strokeWidth={2.2} />
+            {formatStarGain(repository.starsGained)}
+          </div>
+        </div>
+
+        <div aria-label={`Growth ${fullGrowthPercentage}`} title={fullGrowthPercentage}>
+          <div className="mb-1.5 text-xs font-medium text-zinc-400/80">Growth</div>
+          <div className="truncate text-base font-semibold tabular-nums text-zinc-100">
+            {formatCompactPercentage(repository.growthPercent)}
+          </div>
+        </div>
+
         <div>
-          <div className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.11em] text-zinc-600">Total stars</div>
-          <div className="flex items-center gap-1.5 text-sm font-semibold tabular-nums text-zinc-200">
+          <div className="mb-1.5 text-xs font-medium text-zinc-400/80">Total</div>
+          <div className="flex items-center gap-1.5 text-sm font-medium tabular-nums text-zinc-300">
             <Star aria-hidden="true" className="size-3.5 text-zinc-500" />
             {formatStars(repository.totalStars)}
           </div>
         </div>
 
-        <div>
-          <div className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.11em] text-zinc-600">Stars gained</div>
-          <div className="flex items-center gap-1.5 text-sm font-semibold tabular-nums text-emerald-400">
-            <TrendingUp aria-hidden="true" className="size-3.5" />
-            {formatStarGain(repository.starsGained)}
-          </div>
-          <div className="mt-0.5 text-[10px] text-zinc-600">{periodLabels[period]}</div>
-        </div>
-
-        <div className="hidden justify-self-end lg:block">
-          <Sparkline values={displayedSparkline} label={`${repository.name} star growth trend`} />
-          <div className="mt-0.5 text-right text-xs font-medium tabular-nums text-emerald-400">
-            {formatPercentage(repository.growthPercent)}
-          </div>
-        </div>
-
-        <div className="col-span-2 mt-1 flex items-end justify-between border-t border-white/[0.05] pt-3 lg:hidden">
-          <span className="text-[10px] font-medium uppercase tracking-[0.11em] text-zinc-600">Growth trend</span>
+        <div className="justify-self-end">
           <Sparkline values={displayedSparkline} label={`${repository.name} star growth trend`} />
         </div>
       </div>

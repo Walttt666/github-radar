@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { SortOption, TrendingCategory, TrendingPeriod } from "@/types/github";
 
 const timeOptions: Array<{ value: TrendingPeriod; label: string }> = [
@@ -47,10 +47,10 @@ function OptionButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 ${
+      className={`min-h-9 shrink-0 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 ${
         active
-          ? "bg-zinc-100 text-zinc-950 shadow-sm"
-          : "text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200"
+          ? "border-zinc-200 bg-zinc-100 text-zinc-950 shadow-sm"
+          : "border-transparent text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100"
       }`}
     >
       {children}
@@ -72,7 +72,7 @@ export function RadarFilters({
     <section aria-label="Repository filters" className="rounded-xl border border-white/[0.08] bg-[#0d1014]">
       <div className="grid gap-5 p-4 sm:p-5 lg:grid-cols-[auto_1fr_auto] lg:items-end lg:gap-7">
         <fieldset className="min-w-0">
-          <legend className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-zinc-600">Time</legend>
+          <legend className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-zinc-400/80">Time</legend>
           <div className="flex w-fit rounded-lg border border-white/[0.08] bg-black/20 p-1">
             {timeOptions.map((option) => (
               <OptionButton
@@ -87,8 +87,8 @@ export function RadarFilters({
         </fieldset>
 
         <fieldset className="min-w-0">
-          <legend className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-zinc-600">Field</legend>
-          <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <legend className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-zinc-400/80">Field</legend>
+          <div className="-mx-1 flex gap-1 overflow-x-auto overscroll-x-contain px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {categoryOptions.map((option) => (
               <OptionButton
                 key={option.value}
@@ -102,11 +102,12 @@ export function RadarFilters({
         </fieldset>
 
         <label className="block min-w-0 lg:w-44">
-          <span className="mb-2 block text-xs font-medium uppercase tracking-[0.12em] text-zinc-600">Sort by</span>
+          <span className="mb-2 block text-xs font-medium uppercase tracking-[0.12em] text-zinc-400/80">Sort by</span>
           <select
             value={sort}
             onChange={(event) => onSortChange(event.target.value as SortOption)}
-            className="h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-sm font-medium text-zinc-300 outline-none transition-colors hover:border-white/15 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/15"
+            aria-label="Sort repositories"
+            className="h-10 w-full rounded-lg border border-white/[0.1] bg-black/20 px-3 text-sm font-medium text-zinc-200 outline-none transition-colors hover:border-white/20 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/20"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value} className="bg-zinc-950">
@@ -120,15 +121,31 @@ export function RadarFilters({
       <div className="border-t border-white/[0.07] p-4 sm:px-5">
         <label className="relative block">
           <span className="sr-only">Search repositories</span>
-          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-600" />
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <input
             type="search"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && query) {
+                event.preventDefault();
+                onQueryChange("");
+              }
+            }}
             maxLength={100}
             placeholder="Search repositories..."
-            className="h-10 w-full rounded-lg border border-white/[0.08] bg-black/20 pl-10 pr-4 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 hover:border-white/15 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/15"
+            className={`h-10 w-full rounded-lg border border-white/[0.1] bg-black/20 pl-10 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-500 hover:border-white/20 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/20 ${query ? "pr-11" : "pr-4"}`}
           />
+          {query && (
+            <button
+              type="button"
+              onClick={() => onQueryChange("")}
+              aria-label="Clear repository search"
+              className="absolute right-1.5 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70"
+            >
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          )}
         </label>
       </div>
     </section>

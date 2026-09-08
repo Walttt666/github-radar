@@ -3,6 +3,7 @@
 :root {
   --background: #090b0e;
   --foreground: #f4f4f5;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -32,4 +33,8 @@ button,
 select,
 input {
   font: inherit;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
 }
